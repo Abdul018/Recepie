@@ -1,6 +1,5 @@
 // src/pages/Browse.js
 import React, { useEffect, useState } from 'react';
-// Updated imports: Added Box, Avatar, removed Card/CardContent
 import { Container, Typography, Grid, Box, Avatar } from '@mui/material';
 import { getPredefinedCatalogTypes, getPredefinedCatalogs } from '../api/browse';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +17,6 @@ export default function Browse() {
   useEffect(() => {
   const fetchData = async () => {
     try {
-      // fetch everything in one shot
       const [typeRes, catRes, favRes, recRes] = await Promise.all([
         getPredefinedCatalogTypes(),
         getPredefinedCatalogs(),
@@ -36,7 +34,6 @@ export default function Browse() {
       ];
       const unique = [...new Set(names)];
 
-      // helper: pick up to k random items
       const sample = (arr, k) => {
         const copy = [...arr];
         for (let i = copy.length - 1; i > 0; i--) {
@@ -74,7 +71,6 @@ export default function Browse() {
 
 
   const getCatalogsForType = (typeId) => {
-    // Ensure catalogs is always an array before filtering
     return Array.isArray(catalogs) ? catalogs.filter(c => c.type === typeId) : [];
   };
 
@@ -82,7 +78,18 @@ return (
   <>
     <NavBar />
 
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    {/* Apply the transparent style directly to the Container */}
+    <Container 
+      maxWidth="lg" 
+      sx={{
+        backgroundColor: 'rgba(255, 255, 255, 0.85)', // White with 85% opacity
+        padding: '20px',
+        borderRadius: '8px',
+        marginTop: '20px', // Add margin top
+        marginBottom: '20px' // Add margin bottom
+        // The existing mt: 4 and mb: 4 are replaced by marginTop/marginBottom
+      }}
+    >
       {/* page title */}
       <Typography
         variant="h4"
@@ -102,7 +109,7 @@ return (
 
           <HorizontalScroll>
             {recommended.map(r => (
-              <RecipeCard key={r.recipe_id} recipe={r} />
+              <RecipeCard key={r.recipe_id ?? r.id} recipe={r} />
             ))}
           </HorizontalScroll>
 
@@ -145,7 +152,8 @@ return (
                         "transform 0.2s ease‑in‑out, box-shadow 0.2s ease‑in‑out",
                     }}
                   >
-                    🍔
+                    {/* Displaying a generic emoji, consider fetching/using cat.icon or similar if available */}
+                    {cat.icon || '🍔'} 
                   </Avatar>
                   <Typography variant="body1" fontWeight="medium">
                     {cat.name}

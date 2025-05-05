@@ -1,6 +1,7 @@
 // src/components/NavBar.js
 import React, { useContext } from "react";
-import { AppBar, Toolbar, Typography, TextField, IconButton, Box, Link } from "@mui/material";
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { AppBar, Toolbar, Typography, TextField, Button, Box, Link } from "@mui/material";
 // Removed logo import as we are using Typography for the title
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import SearchIcon from '@mui/icons-material/Search'; // Import SearchIcon
@@ -96,14 +97,14 @@ export function NavBar() {
 
 
         {/* Logout Icon */}
-        <IconButton
-            // Use primary color for the icon button
-            sx={{ color: primaryColor }}
-            onClick={() => (logout(), nav("/auth"))}
-            aria-label="Account options"
+        <Button
+          color="inherit"
+          endIcon={<ExitToAppIcon />}
+          onClick={() => { logout(); nav('/auth'); }}
+          sx={{ textTransform: 'none', color: primaryColor }}  // keep your theme colour
         >
-          <AccountCircle />
-        </IconButton>
+          Sign&nbsp;out
+        </Button>
       </Toolbar>
     </AppBar>
   );

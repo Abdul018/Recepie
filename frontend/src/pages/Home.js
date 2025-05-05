@@ -1,9 +1,9 @@
 // src/pages/Home.js
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Grid, Box, Button } from '@mui/material'; // Keep Grid for overall structure if needed elsewhere, keep Box and Button
+import { Container, Typography, Grid, Box, Button } from '@mui/material';
 import { api } from '../api/auth';
 import { NavBar } from '../components/NavBar';
-import HorizontalScroll from '../components/HorizontalScroll'; // Import HorizontalScroll again
+import HorizontalScroll from '../components/HorizontalScroll';
 import { RecipeCard } from '../components/RecipeCard';
 import { CatalogCard } from '../components/CatalogCard';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,6 @@ export default function Home() {
   const navigate = useNavigate();
 
    useEffect(() => {
-      /* one tiny helper so we can call it on mount AND on focus */
       const fetchDashboardData = async () => {
         try {
           const [r, f, c] = await Promise.all([
@@ -23,33 +22,37 @@ export default function Home() {
             api.get('favorites/'),
             api.get('catalogs/')
           ]);
-          // Removed the .slice() limit as horizontal scroll shows all
-          setRecent(r.data.results || r.data);
-          setFavorites(f.data.results || f.data);
-          setCatalogs(c.data.results || c.data);
+          setRecent(r.data.results || r.data || []);
+          setFavorites(f.data.results || f.data || []);
+          setCatalogs(c.data.results || c.data || []);
         } catch (err) {
           console.error(err);
+          setRecent([]);
+          setFavorites([]);
+          setCatalogs([]);
         }
       };
 
-      /* first load */
       fetchDashboardData();
-
-      /* refresh whenever the tab/window gains focus */
       const handleFocus = () => fetchDashboardData();
       window.addEventListener('focus', handleFocus);
-
-      /* clean-up */
       return () => window.removeEventListener('focus', handleFocus);
-    }, []); // Empty dependency array
-
-  // Removed the renderSectionGrid helper function
+    }, []);
 
   return (
     <>
       <NavBar />
-  
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      {/* Apply the transparent style directly to the Container */}
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.85)', // White with 85% opacity
+          padding: '20px',
+          borderRadius: '8px',
+          marginTop: '20px', // Add margin top
+          marginBottom: '20px' // Add margin bottom
+        }}
+      >
         {/* Recently Accessed */}
         <Box sx={{ mb: 4 }}>
           <Box
@@ -70,7 +73,7 @@ export default function Home() {
               <Typography sx={{ ml: 1.5 }}>No recent recipes</Typography>
             ) : (
               recent.map(r => (
-                <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
+                <Box key={r.recipe_id ?? r.id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
                   <RecipeCard recipe={r} />
                 </Box>
               ))
@@ -100,7 +103,7 @@ export default function Home() {
               <Typography sx={{ ml: 1.5 }}>No favorites yet</Typography>
             ) : (
               favorites.map(r => (
-                <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
+                <Box key={r.recipe_id ?? r.id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
                   <RecipeCard recipe={r} />
                 </Box>
               ))
