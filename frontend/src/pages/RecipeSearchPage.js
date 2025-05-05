@@ -1,7 +1,7 @@
 // src/pages/RecipeSearchPage.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Typography, Grid, Button, CircularProgress } from '@mui/material';
+import { Container, Typography, Grid, Button, CircularProgress, Box, Paper } from '@mui/material';
 import { api } from '../api/auth';
 import { NavBar } from '../components/NavBar';
 import { RecipeCard } from '../components/RecipeCard';
@@ -27,6 +27,7 @@ export default function RecipeSearchPage() {
       const filters = catalogRes.data.filter_criteria || {};
       const endpoint = url || 'recipes/';
       const res = await api.get(endpoint, { params: filters });
+      console.log(res);
       setRecipes(res.data.results || res.data);
       setNextPageUrl(res.data.next);
     } catch (err) {
