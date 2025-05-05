@@ -48,63 +48,94 @@ export default function Home() {
   return (
     <>
       <NavBar />
-
+  
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        {/* Recently Accessed - Using HorizontalScroll */}
-        <Box sx={{ mb: 4 }}> {/* Add bottom margin */}
-           <Typography variant="h5" component="h2" gutterBottom>Recently Accessed</Typography>
-           <HorizontalScroll>
-             {recent.length === 0 ? (
-               <Typography sx={{ ml: 1.5 }}>No recent recipes</Typography>
-             ) : (
-               recent.map(r => (
-                  // Add some spacing between cards in horizontal scroll
-                 <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
-                    <RecipeCard recipe={r} />
-                 </Box>
-               ))
-             )}
-           </HorizontalScroll>
+        {/* Recently Accessed */}
+        <Box sx={{ mb: 4 }}>
+          <Box
+            sx={{
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              display: 'inline-block',
+              px: 2,
+              py: 0.5,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Typography variant="h5" component="h2">Recently Accessed</Typography>
+          </Box>
+          <HorizontalScroll>
+            {recent.length === 0 ? (
+              <Typography sx={{ ml: 1.5 }}>No recent recipes</Typography>
+            ) : (
+              recent.map(r => (
+                <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
+                  <RecipeCard recipe={r} />
+                </Box>
+              ))
+            )}
+          </HorizontalScroll>
         </Box>
-
-        {/* Favourites - Using HorizontalScroll */}
-         <Box sx={{ mb: 4 }}> {/* Add bottom margin */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h5" component="h2">Favourites</Typography>
-                <Button size="small" onClick={() => navigate('/favorites')}>
-                  View All
-                </Button>
-             </Box>
-             <HorizontalScroll>
-               {favorites.length === 0 ? (
-                 <Typography sx={{ ml: 1.5 }}>No favorites yet</Typography>
-               ) : (
-                 favorites.map(r => (
-                    <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
-                      <RecipeCard recipe={r} />
-                    </Box>
-                 ))
-               )}
-             </HorizontalScroll>
+  
+        {/* Favourites */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Box
+              sx={{
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                color: 'white',
+                display: 'inline-block',
+                px: 2,
+                py: 0.5,
+                borderRadius: 1
+              }}
+            >
+              <Typography variant="h5" component="h2">Favourites</Typography>
+            </Box>
+            <Button size="small" onClick={() => navigate('/favorites')}>View All</Button>
+          </Box>
+          <HorizontalScroll>
+            {favorites.length === 0 ? (
+              <Typography sx={{ ml: 1.5 }}>No favorites yet</Typography>
+            ) : (
+              favorites.map(r => (
+                <Box key={r.recipe_id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
+                  <RecipeCard recipe={r} />
+                </Box>
+              ))
+            )}
+          </HorizontalScroll>
         </Box>
-
-        {/* User Catalogs - Using HorizontalScroll */}
-         <Box sx={{ mb: 4 }}> {/* Add bottom margin */}
-             <Typography variant="h5" component="h2" gutterBottom>Your Catalogs</Typography>
-             <HorizontalScroll>
-               {catalogs.length === 0 ? (
-                 <Typography sx={{ ml: 1.5 }}>No catalogs created yet</Typography>
-               ) : (
-                 catalogs.map(cat => (
-                    <Box key={cat.id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
-                        {/* Pass onClick handler for navigation */}
-                       <CatalogCard catalog={cat} onClick={() => navigate(`/catalog/${cat.id}`)} />
-                   </Box>
-                 ))
-               )}
-             </HorizontalScroll>
-         </Box>
+  
+        {/* User Catalogs */}
+        <Box sx={{ mb: 4 }}>
+          <Box
+            sx={{
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              display: 'inline-block',
+              px: 2,
+              py: 0.5,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Typography variant="h5" component="h2">Your Catalogs</Typography>
+          </Box>
+          <HorizontalScroll>
+            {catalogs.length === 0 ? (
+              <Typography sx={{ ml: 1.5 }}>No catalogs created yet</Typography>
+            ) : (
+              catalogs.map(cat => (
+                <Box key={cat.id} sx={{ width: 250, flexShrink: 0, mr: 2 }}>
+                  <CatalogCard catalog={cat} onClick={() => navigate(`/catalog/${cat.id}`)} />
+                </Box>
+              ))
+            )}
+          </HorizontalScroll>
+        </Box>
       </Container>
     </>
   );
-}
+}  

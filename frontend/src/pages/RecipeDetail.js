@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Grid, Paper, Button, Chip, Box, CircularProgress,
@@ -7,59 +7,54 @@ import {
 import { Favorite, FavoriteBorder, Add } from '@mui/icons-material';
 import { api } from '../api/auth';
 import { NavBar } from '../components/NavBar';
-import  HorizontalScroll from '../components/HorizontalScroll';
+import HorizontalScroll from '../components/HorizontalScroll';
 import { RecipeCard } from '../components/RecipeCard';
+
 export default function RecipeDetail() {
-  /* ───────── URL + nav ───────── */
-  const { recipe_id } = useParams();          // /recipe/:recipe_id  (string)
+  const { recipe_id } = useParams();
   const navigate = useNavigate();
 
-  /* ───────── state ───────── */
-  const [recipe,   setRecipe]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [isFav,    setIsFav]    = useState(false);
-
-  /* catalog menu */
+  const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isFav, setIsFav] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [catalogs, setCatalogs] = useState([]);   // always an array
-  const [newName,  setNewName]  = useState('');
+  const [catalogs, setCatalogs] = useState([]);
+  const [newName, setNewName] = useState('');
   const menuOpen = Boolean(anchorEl);
   const inputRef = useRef(null);
-
   const [similar, setSimilar] = useState([]);
-  /* ───────── initial fetch ───────── */
+
   const fetchSimilar = async (rec) => {
-  const tokens = rec.name
-    .split(/\s+/)
-    .map(w => w.replace(/[^\w]/g, '').toLowerCase())
-    .filter(w => w.length > 2);
+    const tokens = rec.name
+      .split(/\s+/)
+      .map(w => w.replace(/[^\w]/g, '').toLowerCase())
+      .filter(w => w.length > 2);
 
-  const seen = new Set([String(rec.recipe_id)]);   // ensure self is excluded
-  const all  = [];
+    const seen = new Set([String(rec.recipe_id)]);
+    const all = [];
 
-  for (const tok of tokens) {
-    try {
-      const res = await api.get('search/', {
-        params: { q: tok, exclude: rec.recipe_id, limit: 3 }
-      });
+    for (const tok of tokens) {
+      try {
+        const res = await api.get('search/', {
+          params: { q: tok, exclude: rec.recipe_id, limit: 3 }
+        });
 
-      for (const r of res.data.results || []) {
-        const key = String(r.recipe_id || r.id);   // normalise key
-        if (!seen.has(key)) {
-          seen.add(key);
-          all.push(r);
-          if (all.length >= 10) break;            // hard cap
+        for (const r of res.data.results || []) {
+          const key = String(r.recipe_id || r.id);
+          if (!seen.has(key)) {
+            seen.add(key);
+            all.push(r);
+            if (all.length >= 10) break;
+          }
         }
-      }
 
-    } catch (err) {
-      console.warn('similar fetch failed:', tok, err.message);
+      } catch (err) {
+        console.warn('similar fetch failed:', tok, err.message);
+      }
+      if (all.length >= 10) break;
     }
-    if (all.length >= 10) break;                  // early exit
-  }
-  console.log(all);
-  return all;
-};
+    return all;
+  };
 
   useEffect(() => {
     if (!recipe_id) return;
@@ -68,16 +63,14 @@ export default function RecipeDetail() {
       try {
         const res = await api.get(`recipes/${recipe_id}/`);
         setRecipe(res.data);
-//        console.log("here",res.data);
         fetchSimilar(res.data).then(setSimilar);
-        setIsFav(res.data.is_favorite);       // comes from serializer
+        setIsFav(res.data.is_favorite);
       } finally {
         setLoading(false);
       }
     })();
   }, [recipe_id]);
 
-  /* ───────── favourite toggle ───────── */
   const toggleFav = async () => {
     try {
       if (isFav) {
@@ -92,19 +85,19 @@ export default function RecipeDetail() {
     }
   };
 
-  /* ───────── catalog helpers ───────── */
   const fetchCatalogs = async () => {
     const res = await api.get('catalogs/');
-    setCatalogs(res.data.results || res.data);       // unwrap pagination
+    setCatalogs(res.data.results || res.data);
   };
 
-    const handleMenuOpen = (e) => {
-      setAnchorEl(e.currentTarget);
-      fetchCatalogs();
-    };
-    useEffect(() => {
-  if (anchorEl && inputRef.current) inputRef.current.focus();
-}, [anchorEl]);
+  const handleMenuOpen = (e) => {
+    setAnchorEl(e.currentTarget);
+    fetchCatalogs();
+  };
+
+  useEffect(() => {
+    if (anchorEl && inputRef.current) inputRef.current.focus();
+  }, [anchorEl]);
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -126,28 +119,22 @@ export default function RecipeDetail() {
     try {
       const res = await api.post('catalogs/', { name: newName.trim() });
       await addToCatalog(res.data.id);
-      fetchCatalogs();        // reflect the new catalog next time
+      fetchCatalogs();
     } catch {
       alert('Could not create catalog');
     }
   };
 
-  /* ───────── render ───────── */
   if (loading) return <CircularProgress sx={{ display: 'block', m: 'auto', mt: 6 }} />;
-  if (!recipe)   return <Typography align="center" sx={{ mt: 6 }}>Recipe not found</Typography>;
-
-
-
-
+  if (!recipe) return <Typography align="center" sx={{ mt: 6 }}>Recipe not found</Typography>;
 
   return (
     <>
       <NavBar />
-  
+
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Button variant="outlined" onClick={() => navigate(-1)}>← Back</Button>
-  
-        {/* IMAGE SECTION */}
+
         <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: 2, mt: 3 }}>
           <Box
             component="img"
@@ -161,37 +148,69 @@ export default function RecipeDetail() {
             }}
           />
         </Paper>
-  
-        {/* CONTENT SECTION */}
+
+        {/* Recipe Name & Controls */}
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            {recipe.name}
-          </Typography>
-  
+          <Box
+            sx={{
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              display: 'inline-block',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              color: 'white'
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold">
+              {recipe.name}
+            </Typography>
+          </Box>
+
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', my: 2 }}>
             {recipe.calories && <Chip label={`${recipe.calories} Cal`} variant="outlined" />}
             {recipe.total_mins && <Chip label={`${recipe.total_mins} mins`} variant="outlined" />}
           </Box>
-  
-          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-            <IconButton color="warning" onClick={toggleFav}>
-              {isFav ? <Favorite /> : <FavoriteBorder />}
+
+          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+            <IconButton
+              color="error"
+              onClick={toggleFav}
+              sx={{
+                border: '1px solid #ccc',
+                backgroundColor: '#fff',
+                '&:hover': { backgroundColor: '#fce4ec' }
+              }}
+            >
+              {isFav ? <Favorite fontSize="medium" /> : <FavoriteBorder fontSize="medium" />}
             </IconButton>
-  
+
             <Button
               variant="contained"
+              size="large"
               startIcon={<Add />}
               onClick={handleMenuOpen}
+              sx={{
+                backgroundColor: '#1976d2',
+                '&:hover': { backgroundColor: '#1565c0' },
+                fontWeight: 'bold'
+              }}
             >
               Add to Catalog
             </Button>
           </Box>
         </Box>
-  
-        {/* BODY SECTION */}
+
+        {/* Ingredients & Instructions */}
         <Grid container spacing={4} sx={{ mt: 4 }}>
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Paper
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.75)',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 Ingredients
               </Typography>
@@ -204,9 +223,16 @@ export default function RecipeDetail() {
               </ul>
             </Paper>
           </Grid>
-  
+
           <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Paper
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.75)',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 Instructions
               </Typography>
@@ -217,11 +243,11 @@ export default function RecipeDetail() {
           </Grid>
         </Grid>
       </Container>
-  
-      {/* ─── Catalog Dropdown ─── */}
+
+      {/* Catalog Menu */}
       <Menu
         anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
+        open={menuOpen}
         onClose={handleMenuClose}
         disableAutoFocusItem
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
@@ -243,63 +269,42 @@ export default function RecipeDetail() {
           </Button>
         </Box>
         <Divider />
-        {/* Catalog list can be added here */}
+        {catalogs.length === 0 ? (
+          <MenuItem disabled>
+            <ListItemText>No catalogs yet</ListItemText>
+          </MenuItem>
+        ) : (
+          catalogs.map((cat) => (
+            <MenuItem key={cat.id} onClick={() => addToCatalog(cat.id)}>
+              <ListItemText>{cat.name}</ListItemText>
+            </MenuItem>
+          ))
+        )}
       </Menu>
-            {similar.length > 0 && (            /* show only when we have data */
-                <Container maxWidth="lg" sx={{ mt: 6, mb: 2 }}>
-                  <Typography variant="h5" gutterBottom>
-                    Recommended recipes
-                  </Typography>
-                </Container>
-              )}
-      <HorizontalScroll>
-          {similar.map(r => (
-            <RecipeCard key={r.recipe_id} recipe={r} />
-          ))}
-      </HorizontalScroll>
 
-      {/* ─── Catalog Dropdown ─── */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          disableAutoFocusItem      // keep focus we set manually
-        >
-          <Box sx={{ px: 2, py: 1, width: 250 }}>
-            <Typography variant="subtitle2">New Catalog…</Typography>
-
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Catalog name"
-              autoFocus               // caret appears
-              inputRef={inputRef}     // allow effect to focus
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && createAndAdd()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <Button fullWidth sx={{ mt: 1 }}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={createAndAdd}>
-              Create & Add
-            </Button>
-          </Box>
-
-          <Divider sx={{ my: 1 }} />
-          {catalogs.length === 0 ? (
-              <MenuItem disabled>
-                <ListItemText>No catalogs yet</ListItemText>
-              </MenuItem>
-            ) : (
-              catalogs.map((cat) => (
-                <MenuItem key={cat.id} onClick={() => addToCatalog(cat.id)}>
-                  <ListItemText>{cat.name}</ListItemText>
-                </MenuItem>
-              ))
-            )}
-        </Menu>
+      {/* Recommended Recipes Section */}
+      {similar.length > 0 && (
+        <Container maxWidth="md" sx={{ mt: 6, mb: 8 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
+              backdropFilter: 'blur(4px)'
+            }}
+          >
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
+              Recommended Recipes
+            </Typography>
+            <HorizontalScroll>
+              {similar.map(r => (
+                <RecipeCard key={r.recipe_id} recipe={r} />
+              ))}
+            </HorizontalScroll>
+          </Paper>
+        </Container>
+      )}
     </>
   );
-}  
+}
