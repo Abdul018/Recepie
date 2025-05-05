@@ -5,14 +5,14 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg,#fff 0%,#ffe4d9 100%)',
+    background: '#f0f0f0',
     fontFamily: "'Helvetica Neue', sans-serif",
   },
   title: {
     marginBottom: '40px',
     fontSize: '48px',
-    color: '#ff7043',
-    fontWeight: 700,
+    color: '#ff6347',
+    fontWeight: '700',
     letterSpacing: '1px',
   },
   flexRow: {
@@ -22,7 +22,7 @@ const styles = {
     justifyContent: 'center',
   },
   card: {
-    background: '#fff',
+    background: '#ffffff',
     borderRadius: '12px',
     boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
     padding: '40px 32px',
@@ -32,14 +32,14 @@ const styles = {
   },
   cardTitle: {
     textAlign: 'center',
-    color: '#333',
+    color: '#333333',
     marginBottom: '24px',
   },
   input: {
     marginBottom: '16px',
     padding: '12px',
-    border: '1px solid #ccc',
-    borderRadius: '6px',
+    border: '1px solid #ff6347',
+    borderRadius: '8px',
     fontSize: '15px',
   },
   button: {

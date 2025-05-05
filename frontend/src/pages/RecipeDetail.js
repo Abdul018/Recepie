@@ -143,64 +143,73 @@ export default function RecipeDetail() {
   return (
     <>
       <NavBar />
-
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+  
+      <Container maxWidth="md" sx={{ mt: 4 }}>
         <Button variant="outlined" onClick={() => navigate(-1)}>← Back</Button>
-
-        {/* TOP SECTION */}
-        <Grid container spacing={4} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={5}>
-            <Paper elevation={1}>
-              <img
-                src={recipe.images?.[0] || 'https://via.placeholder.com/600x400'}
-                alt={recipe.name}
-                style={{ width: '100%', height: 'auto' }}
-              />
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={7}>
-            <Typography variant="h4" gutterBottom>{recipe.name}</Typography>
-
-            <Box sx={{ my: 2 }}>
-              {recipe.calories && <Chip label={`${recipe.calories} Cal`} sx={{ mr: 1 }}/> }
-              {recipe.total_mins && <Chip label={`${recipe.total_mins} mins`}/> }
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-              <IconButton color="warning" onClick={toggleFav}>
-                {isFav ? <Favorite /> : <FavoriteBorder />}
-              </IconButton>
-
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleMenuOpen}
-              >
-                Add to Catalog
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
-
+  
+        {/* IMAGE SECTION */}
+        <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: 2, mt: 3 }}>
+          <Box
+            component="img"
+            src={recipe.images?.[0] || 'https://via.placeholder.com/600x400'}
+            alt={recipe.name}
+            sx={{
+              width: '100%',
+              height: { xs: 250, sm: 300, md: 400 },
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        </Paper>
+  
+        {/* CONTENT SECTION */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
+            {recipe.name}
+          </Typography>
+  
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', my: 2 }}>
+            {recipe.calories && <Chip label={`${recipe.calories} Cal`} variant="outlined" />}
+            {recipe.total_mins && <Chip label={`${recipe.total_mins} mins`} variant="outlined" />}
+          </Box>
+  
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <IconButton color="warning" onClick={toggleFav}>
+              {isFav ? <Favorite /> : <FavoriteBorder />}
+            </IconButton>
+  
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleMenuOpen}
+            >
+              Add to Catalog
+            </Button>
+          </Box>
+        </Box>
+  
         {/* BODY SECTION */}
         <Grid container spacing={4} sx={{ mt: 4 }}>
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>Ingredients</Typography>
-                <ul style={{ marginLeft: 16 }}>
-                  {recipe.ingredients.map((ing, idx) => (
-                    <li key={idx}>
-                      {ing.name}{ing.quantity ? ` – ${ing.quantity}` : ''}
-                    </li>
-                  ))}
-                </ul>
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Ingredients
+              </Typography>
+              <ul style={{ marginLeft: 20, paddingLeft: 0 }}>
+                {recipe.ingredients.map((ing, idx) => (
+                  <li key={idx}>
+                    {ing.name}{ing.quantity ? ` – ${ing.quantity}` : ''}
+                  </li>
+                ))}
+              </ul>
             </Paper>
           </Grid>
-
+  
           <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>Instructions</Typography>
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Instructions
+              </Typography>
               <Typography sx={{ whiteSpace: 'pre-line' }}>
                 {recipe.instructions}
               </Typography>
@@ -208,6 +217,34 @@ export default function RecipeDetail() {
           </Grid>
         </Grid>
       </Container>
+  
+      {/* ─── Catalog Dropdown ─── */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        disableAutoFocusItem
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Box sx={{ px: 2, py: 1.5, width: 260 }}>
+          <Typography variant="subtitle2" gutterBottom>New Catalog</Typography>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Catalog name"
+            autoFocus
+            inputRef={inputRef}
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && createAndAdd()}
+          />
+          <Button fullWidth variant="outlined" sx={{ mt: 1 }} onClick={createAndAdd}>
+            Create & Add
+          </Button>
+        </Box>
+        <Divider />
+        {/* Catalog list can be added here */}
+      </Menu>
             {similar.length > 0 && (            /* show only when we have data */
                 <Container maxWidth="lg" sx={{ mt: 6, mb: 2 }}>
                   <Typography variant="h5" gutterBottom>
@@ -265,4 +302,4 @@ export default function RecipeDetail() {
         </Menu>
     </>
   );
-}
+}  
