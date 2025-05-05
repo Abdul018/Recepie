@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework.views import APIView
 from .serializers import SlimRecipeSerializer
+from django.db.models import Case, When, IntegerField
 
 from .models import (
     Recipe,
@@ -223,19 +224,31 @@ class CatalogViewSet(viewsets.ModelViewSet):
 
 
 class RecentList(generics.ListAPIView):
-    serializer_class = SlimRecipeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class    = SlimRecipeSerializer
+    permission_classes  = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        ids = (
+        ids = list(                # turn the queryset into a Python list
             RecipeAccess.objects
             .filter(user=self.request.user)
             .order_by("-accessed_at")
-            # follow FK ➜ recipe ➜ recipe_id
             .values_list("recipe__recipe_id", flat=True)[:10]
         )
 
-        return Recipe.objects.filter(recipe_id__in=ids)
+        if not ids:
+            return Recipe.objects.none()
+
+        # build CASE … WHEN … THEN … END
+        ordering = Case(
+            *[When(recipe_id=rid, then=pos) for pos, rid in enumerate(ids)],
+            output_field=IntegerField(),
+        )
+
+        return (
+            Recipe.objects
+            .filter(recipe_id__in=ids)
+            .order_by(ordering)     # ⬅ preserved newest‑first
+        )
 
 
 # ───── search feature ────────────────────
@@ -243,7 +256,10 @@ class SearchView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        query = request.query_params.get("q", "")
+        query      = request.query_params.get("q", "")
+        exclude_id = request.query_params.get("exclude")   # ← NEW
+        limit      = int(request.query_params.get("limit", 10))
+
         if not query:
             return Response({"results": []})
 
@@ -252,15 +268,16 @@ class SearchView(APIView):
             SearchVector("keywords", weight="B") +
             SearchVector("ingredients__name", weight="B")
         )
-
-        recipes = (
+        qs = (
             Recipe.objects
             .annotate(rank=SearchRank(vector, SearchQuery(query)))
-            .filter(rank__gte=0.1)  # threshold to limit weak matches
+            .filter(rank__gte=0.1)
             .order_by("-rank")
             .distinct()
         )
 
-        serializer = SlimRecipeSerializer(recipes, many=True)
-        return Response({"results": serializer.data})
+        if exclude_id:
+            qs = qs.exclude(recipe_id=exclude_id)
 
+        serializer = SlimRecipeSerializer(qs[:limit], many=True)
+        return Response({"results": serializer.data})
