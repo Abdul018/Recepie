@@ -7,7 +7,8 @@ import {
 import { Favorite, FavoriteBorder, Add } from '@mui/icons-material';
 import { api } from '../api/auth';
 import { NavBar } from '../components/NavBar';
-
+import  HorizontalScroll from '../components/HorizontalScroll';
+import { RecipeCard } from '../components/RecipeCard';
 export default function RecipeDetail() {
   /* ───────── URL + nav ───────── */
   const { recipe_id } = useParams();          // /recipe/:recipe_id  (string)
@@ -24,7 +25,42 @@ export default function RecipeDetail() {
   const [newName,  setNewName]  = useState('');
   const menuOpen = Boolean(anchorEl);
   const inputRef = useRef(null);
+
+  const [similar, setSimilar] = useState([]);
   /* ───────── initial fetch ───────── */
+  const fetchSimilar = async (rec) => {
+  const tokens = rec.name
+    .split(/\s+/)
+    .map(w => w.replace(/[^\w]/g, '').toLowerCase())
+    .filter(w => w.length > 2);
+
+  const seen = new Set([String(rec.recipe_id)]);   // ensure self is excluded
+  const all  = [];
+
+  for (const tok of tokens) {
+    try {
+      const res = await api.get('search/', {
+        params: { q: tok, exclude: rec.recipe_id, limit: 3 }
+      });
+
+      for (const r of res.data.results || []) {
+        const key = String(r.recipe_id || r.id);   // normalise key
+        if (!seen.has(key)) {
+          seen.add(key);
+          all.push(r);
+          if (all.length >= 10) break;            // hard cap
+        }
+      }
+
+    } catch (err) {
+      console.warn('similar fetch failed:', tok, err.message);
+    }
+    if (all.length >= 10) break;                  // early exit
+  }
+  console.log(all);
+  return all;
+};
+
   useEffect(() => {
     if (!recipe_id) return;
 
@@ -32,7 +68,8 @@ export default function RecipeDetail() {
       try {
         const res = await api.get(`recipes/${recipe_id}/`);
         setRecipe(res.data);
-        console.log("here",res.data);
+//        console.log("here",res.data);
+        fetchSimilar(res.data).then(setSimilar);
         setIsFav(res.data.is_favorite);       // comes from serializer
       } finally {
         setLoading(false);
@@ -98,6 +135,10 @@ export default function RecipeDetail() {
   /* ───────── render ───────── */
   if (loading) return <CircularProgress sx={{ display: 'block', m: 'auto', mt: 6 }} />;
   if (!recipe)   return <Typography align="center" sx={{ mt: 6 }}>Recipe not found</Typography>;
+
+
+
+
 
   return (
     <>
@@ -204,6 +245,61 @@ export default function RecipeDetail() {
         <Divider />
         {/* Catalog list can be added here */}
       </Menu>
+            {similar.length > 0 && (            /* show only when we have data */
+                <Container maxWidth="lg" sx={{ mt: 6, mb: 2 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Recommended recipes
+                  </Typography>
+                </Container>
+              )}
+      <HorizontalScroll>
+          {similar.map(r => (
+            <RecipeCard key={r.recipe_id} recipe={r} />
+          ))}
+      </HorizontalScroll>
+
+      {/* ─── Catalog Dropdown ─── */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          disableAutoFocusItem      // keep focus we set manually
+        >
+          <Box sx={{ px: 2, py: 1, width: 250 }}>
+            <Typography variant="subtitle2">New Catalog…</Typography>
+
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Catalog name"
+              autoFocus               // caret appears
+              inputRef={inputRef}     // allow effect to focus
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && createAndAdd()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+            <Button fullWidth sx={{ mt: 1 }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={createAndAdd}>
+              Create & Add
+            </Button>
+          </Box>
+
+          <Divider sx={{ my: 1 }} />
+          {catalogs.length === 0 ? (
+              <MenuItem disabled>
+                <ListItemText>No catalogs yet</ListItemText>
+              </MenuItem>
+            ) : (
+              catalogs.map((cat) => (
+                <MenuItem key={cat.id} onClick={() => addToCatalog(cat.id)}>
+                  <ListItemText>{cat.name}</ListItemText>
+                </MenuItem>
+              ))
+            )}
+        </Menu>
     </>
   );
 }  
