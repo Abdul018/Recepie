@@ -1,6 +1,6 @@
 // src/pages/Browse.js
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Grid, Box, Avatar } from '@mui/material';
+import { Container, Typography, Grid, Box } from '@mui/material';
 import { getPredefinedCatalogTypes, getPredefinedCatalogs } from '../api/browse';
 import { useNavigate } from 'react-router-dom';
 import { NavBar } from '../components/NavBar';
@@ -13,6 +13,20 @@ export default function Browse() {
   const [catalogs, setCatalogs] = useState([]);
   const navigate = useNavigate();
   const [recommended, setRecommended] = useState([]);
+
+  const getCatalogEmoji = (name = '') => {
+    const n = name.trim().toLowerCase();
+  
+    if (n.includes('breakfast'))              return '🍳';
+    if (n.includes('dessert'))                return '🍰';
+    if (n.includes('lunch') || n.includes('snack'))
+                                             return '🥪';
+    if (n.includes('beverage'))               return '🥤';
+    if (n.includes('< 15'))                   return '⏱️';
+    if (n.includes('< 30'))                   return '⏳';
+    if (n.includes('< 60'))                   return '⌛';
+    return '🍽️';                             // fallback
+  };
 
   useEffect(() => {
   const fetchData = async () => {
@@ -124,44 +138,52 @@ return (
             {type.name}
           </Typography>
 
-          <Grid container spacing={4} justifyContent="flex-start">
-            {getCatalogsForType(type.id).map(cat => (
-              <Grid item key={cat.id} xs={6} sm={4} md={3} lg={2}>
-                <Box
-                  onClick={() => navigate(`/browse-catalog/${cat.id}`)}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    "&:hover": {
-                      "& .MuiAvatar-root": { boxShadow: 3, transform: "scale(1.05)" },
-                      "& .MuiTypography-root": { color: "primary.main" },
-                    },
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      width: 120,
-                      height: 120,
-                      mb: 1.5,
-                      bgcolor: "grey.200",
-                      fontSize: "4rem",
-                      transition:
-                        "transform 0.2s ease‑in‑out, box-shadow 0.2s ease‑in‑out",
-                    }}
-                  >
-                    {/* Displaying a generic emoji, consider fetching/using cat.icon or similar if available */}
-                    {cat.icon || '🍔'} 
-                  </Avatar>
-                  <Typography variant="body1" fontWeight="medium">
-                    {cat.name}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
+          <Grid container spacing={4} sx={{ justifyContent: 'flex-start' }}>
+  {getCatalogsForType(type.id).map((cat) => (
+    <Grid key={cat.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+      <Box
+        onClick={() => navigate(`/browse-catalog/${cat.id}`)}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          cursor: 'pointer',
+          '&:hover .cat-icon': { boxShadow: 3, transform: 'scale(1.05)' },
+          '&:hover .cat-name': { color: 'primary.main' },
+        }}
+      >
+        {/* icon circle */}
+        <Box
+          className="cat-icon"
+          sx={{
+            width: 120,
+            height: 120,
+            mb: 1.5,
+            borderRadius: '50%',
+            bgcolor: 'grey.200',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '4rem',
+            transition: 'transform .2s, box-shadow .2s',
+          }}
+        >
+          {getCatalogEmoji(cat.name)}
+        </Box>
+
+        {/* label */}
+        <Typography
+          className="cat-name"
+          variant="body1"
+          fontWeight="medium"
+        >
+          {cat.name}
+        </Typography>
+      </Box>
+    </Grid>
+  ))}
+</Grid>
         </Box>
       ))}
     </Container>
