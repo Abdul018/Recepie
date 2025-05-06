@@ -50,17 +50,35 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return Favorite.objects.filter(user=request.user, recipe=obj).exists()
 
+
+# recipes/serializers.py
+class CatalogRecipeSerializer(serializers.ModelSerializer):
+    """Slim recipe representation inside a catalog (one DB hit)."""
+    recipe_id = serializers.IntegerField(source="recipe.recipe_id")
+    name = serializers.CharField(source="recipe.name")
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CatalogRecipe
+        fields = ("recipe_id", "name", "image")
+
+    def get_image(self, obj):
+        img = (obj.recipe.image or obj.recipe.image[0:1]) if hasattr(obj.recipe, "image") else None
+        return img or "https://via.placeholder.com/200"
+
+
 class CatalogSerializer(serializers.ModelSerializer):
-    recipes = serializers.SerializerMethodField()     # ← was SlimRecipeSerializer(source=...)
-    # ingredients = IngredientQtySerializer(source="recipe_ingredients", many=True)
+    # → list of slim‑recipes *in original order of insertion*
+    recipes = CatalogRecipeSerializer(source="catalog_recipes", many=True, read_only=True)
+    is_owner = serializers.SerializerMethodField()  # for UI (trash‐can icon)
+
     class Meta:
         model = Catalog
-        fields = ("id", "name", "recipes")
+        fields = ("id", "name", "is_owner", "recipes")
 
-    def get_recipes(self, obj):
-        # pull the underlying Recipe objects
-        qs = [cr.recipe for cr in obj.catalog_recipes.all()]
-        return SlimRecipeSerializer(qs, many=True).data
+    def get_is_owner(self, obj):
+        user = self.context.get("request").user
+        return bool(user and user.is_authenticated and obj.user_id == user.id)
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

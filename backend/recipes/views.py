@@ -59,29 +59,66 @@ class RecentList(generics.ListAPIView):
 
 
 # ───────────────────────────────────────────────────────────────
-# 3 ·  Catalog CRUD (read-only + custom add-recipe)
-class CatalogViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CatalogSerializer
+# Catalog CRUD (create/list/retrieve) + add & remove recipe
+class CatalogViewSet(viewsets.ModelViewSet):
+    """
+    • GET  /api/catalogs/               – list user catalogs
+    • POST /api/catalogs/               – create new catalog   (name)
+    • GET  /api/catalogs/<pk>/          – retrieve one catalog
+    • POST /api/catalogs/<pk>/add-recipe/          – add recipe
+    • DELETE /api/catalogs/<pk>/remove-recipe/<rid>/ – remove recipe
+    """
+    serializer_class   = CatalogSerializer
     permission_classes = AUTH
+    http_method_names  = ["get", "post", "delete"]      # no update/partial_update
 
+    # ---- queryset limited to this user ----
     def get_queryset(self):
-        return Catalog.objects.filter(user=self.request.user)
+        return (
+            Catalog.objects
+            .filter(user=self.request.user)
+            .prefetch_related("catalog_recipes__recipe")
+        )
 
-    # POST /api/catalogs/<pk>/add-recipe/  { "recipe_id": 462697 }
+    # ---- create new catalog ----
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    # ---- POST /api/catalogs/<pk>/add-recipe/ ----
     @action(detail=True, methods=["post"], url_path="add-recipe")
     def add_recipe(self, request, pk=None):
-        catalog = self.get_object()
         recipe_id = request.data.get("recipe_id")
         if not recipe_id:
-            return Response(
-                {"detail": "recipe_id required"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "recipe_id required"}, status=400)
+
+        catalog = self.get_object()
         try:
             recipe = Recipe.objects.get(recipe_id=recipe_id)
-            CatalogRecipe.objects.get_or_create(catalog=catalog, recipe=recipe)
-            return Response({"detail": "Recipe added"}, status=status.HTTP_201_CREATED)
         except Recipe.DoesNotExist:
-            return Response({"detail": "Recipe not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Recipe not found"}, status=404)
+
+        CatalogRecipe.objects.get_or_create(catalog=catalog, recipe=recipe)
+        return Response({"detail": "Recipe added"}, status=status.HTTP_201_CREATED)
+
+    # ---- DELETE /api/catalogs/<pk>/remove-recipe/<rid>/ ----
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path=r"remove-recipe/(?P<recipe_id>\d+)"
+    )
+    def remove_recipe(self, request, pk=None, recipe_id=None):
+        catalog = self.get_object()
+        deleted, _ = CatalogRecipe.objects.filter(
+            catalog=catalog,
+            recipe__recipe_id=recipe_id
+        ).delete()
+
+        if deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": "Recipe not found in this catalog"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 
 # ───────────────────────────────────────────────────────────────
@@ -201,20 +238,22 @@ class FavoriteViewSet(viewsets.ModelViewSet):          # 🟢 ModelViewSet → a
             user=request.user, recipe__recipe_id=rid
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-# ───── 2. Catalogs (list, create, add-recipe) ────────────────────
 class CatalogViewSet(viewsets.ModelViewSet):
-    serializer_class = CatalogSerializer
+    serializer_class   = CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_field       = "id"
 
     def get_queryset(self):
-        return Catalog.objects.filter(user=self.request.user)
+        # only the user's own catalogs
+        return (Catalog.objects
+                .filter(user=self.request.user)
+                .prefetch_related("catalog_recipes__recipe"))
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["post"], url_path="add-recipe")
-    def add_recipe(self, request, pk=None):
+    def add_recipe(self, request, id=None):
         rid = request.data.get("recipe_id")
         if not rid:
             return Response({"detail": "recipe_id required"}, status=400)
@@ -222,7 +261,16 @@ class CatalogViewSet(viewsets.ModelViewSet):
         CatalogRecipe.objects.get_or_create(catalog=self.get_object(), recipe=recipe)
         return Response({"detail": "added"}, status=status.HTTP_201_CREATED)
 
+    # NEW: allow client to delete one recipe from the catalog
+    @action(detail=True, methods=["delete"], url_path=r"remove-recipe/(?P<recipe_id>\d+)")
+    def remove_recipe(self, request, id=None, recipe_id=None):
+        CatalogRecipe.objects.filter(
+            catalog=self.get_object(),
+            recipe__recipe_id=recipe_id
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    
 class RecentList(generics.ListAPIView):
     serializer_class    = SlimRecipeSerializer
     permission_classes  = [permissions.IsAuthenticated]
