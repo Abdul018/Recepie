@@ -57,10 +57,12 @@ class CatalogRecipeSerializer(serializers.ModelSerializer):
     recipe_id = serializers.IntegerField(source="recipe.recipe_id")
     name = serializers.CharField(source="recipe.name")
     image = serializers.SerializerMethodField()
+    calories    = serializers.FloatField(source="recipe.calories")
+    total_mins  = serializers.IntegerField(source="recipe.total_mins")
 
     class Meta:
         model = CatalogRecipe
-        fields = ("recipe_id", "name", "image")
+        fields = ("recipe_id", "name", "image","calories", "total_mins")
 
     def get_image(self, obj):
         img = (obj.recipe.image or obj.recipe.image[0:1]) if hasattr(obj.recipe, "image") else None
@@ -113,7 +115,7 @@ class SlimRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Recipe
-        fields = ("recipe_id", "name", "image")    # ← no internal 'id'
+        fields = ("recipe_id", "name", "image", "calories", "total_mins"  )
 
     def get_image(self, obj):
         DEFAULT = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFL5uibOV8chTl50DVzJkzLrOdLXQQL9EoNw&s"

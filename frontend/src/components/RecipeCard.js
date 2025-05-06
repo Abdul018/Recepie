@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Card, CardContent, Typography, CardMedia, Box,
-  IconButton
+  IconButton, Stack
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 
@@ -10,7 +10,7 @@ export function RecipeCard({ recipe, onRemove }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (onRemove) return;            // disable navigation when trash is shown
+    if (onRemove) return;                    // disable nav when delete mode
     if (!recipe.recipe_id) {
       console.error('Recipe missing recipe_id:', recipe);
       return;
@@ -25,7 +25,7 @@ export function RecipeCard({ recipe, onRemove }) {
 
   return (
     <Card
-      sx={{ cursor: 'pointer', height: '100%', position: 'relative', borderRadius: 2, overflow: 'hidden' }}
+      sx={{ cursor: 'pointer', borderRadius: 2, overflow: 'hidden', position: 'relative' }}
       onClick={handleClick}
     >
       {/* optional delete icon */}
@@ -41,7 +41,7 @@ export function RecipeCard({ recipe, onRemove }) {
             '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
           }}
           onClick={(e) => {
-            e.stopPropagation();     // prevent card navigation
+            e.stopPropagation();
             onRemove(recipe);
           }}
         >
@@ -49,35 +49,33 @@ export function RecipeCard({ recipe, onRemove }) {
         </IconButton>
       )}
 
+      {/* image */}
       <CardMedia
         component="img"
-        sx={{ height: 180, objectFit: 'cover', display: 'block' }}
         image={imageUrl}
         alt={recipe.name || 'Recipe image'}
+        sx={{ height: 180, objectFit: 'cover', display: 'block' }}
       />
 
-      {/* gradient overlay for name */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
-          color: 'white',
-          px: 1.5,
-          pt: 2,
-          pb: 1,
-        }}
-      >
+      {/* text block */}
+      <CardContent sx={{ py: 1.5, px: 2 }}>
         <Typography
-          variant="body1"
+          variant="subtitle1"
           fontWeight="bold"
+          gutterBottom={!!(recipe.calories || recipe.total_mins)}
           sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
           {recipe.name}
         </Typography>
-      </Box>
+
+        {(recipe.calories || recipe.total_mins) && (
+          <Typography variant="body2" color="text.secondary">
+            {recipe.calories && `${recipe.calories} Cal`}
+            {recipe.calories && recipe.total_mins && ' · '}
+            {recipe.total_mins && `${recipe.total_mins} mins`}
+          </Typography>
+        )}
+      </CardContent>
     </Card>
   );
 }

@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container, Typography, Grid, Button,
-  CircularProgress, Box
+   Container, Typography, Grid, Button, CircularProgress, Box,
+    IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogActions
 } from '@mui/material';
+import { MoreVert } from '@mui/icons-material';
 import { api } from '../api/auth';
 import { RecipeCard } from '../components/RecipeCard';
 import { NavBar } from '../components/NavBar';
@@ -15,6 +16,8 @@ export default function CatalogRecipes() {
 
   const [catalog, setCatalog] = useState(null); // { id, name, is_owner, recipes:[] }
   const [loading, setLoading] = useState(true);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [dlgOpen,   setDlgOpen]   = useState(false);
 
   /* ---------- fetch once ---------- */
   useEffect(() => {
@@ -91,8 +94,34 @@ export default function CatalogRecipes() {
         }}
       >
         <Button variant="outlined" onClick={() => navigate(-1)}>← Back</Button>
-        <Typography variant="h4" sx={{ mt: 2, mb: 4 }}>{catalog.name}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, mt: 2 }}>
+        <Typography variant="h4" sx={{ flexGrow: 1 }}>{catalog.name}</Typography>
+        {catalog.is_owner && (
+          <>
+            <IconButton
+              aria-label="catalog options"
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+            >
+              <MoreVert />
+            </IconButton>
 
+            <Menu
+              anchorEl={menuAnchor}
+              open={Boolean(menuAnchor)}
+              onClose={() => setMenuAnchor(null)}
+               >
+                 <MenuItem
+                   onClick={() => {
+                     setMenuAnchor(null);
+                     setDlgOpen(true);              // open confirm dialog
+                   }}
+                 >
+                   Delete catalog
+                 </MenuItem>
+               </Menu>
+             </>
+           )}
+         </Box>
         {recipes.length === 0 ? (
           <Typography>No recipes in this catalog yet.</Typography>
         ) : (
@@ -109,6 +138,26 @@ export default function CatalogRecipes() {
           </Grid>
         )}
       </Container>
+      + {/* ---------- confirm‑delete dialog ---------- */}
+      <Dialog open={dlgOpen} onClose={() => setDlgOpen(false)}>
+         <DialogTitle>Delete this catalog permanently?</DialogTitle>
+         <DialogActions>
+           <Button onClick={() => setDlgOpen(false)}>Cancel</Button>
+           <Button
+             color="error"
+             onClick={async () => {
+               try {
+                 await api.delete(`catalogs/${catalog.id}/`);
+                 navigate('/');                   // or navigate(-1) if preferred
+               } catch {
+                 alert('Could not delete catalog');
+               }
+             }}
+           >
+             Delete
+           </Button>
+         </DialogActions>
+       </Dialog>
     </>
   );
 }

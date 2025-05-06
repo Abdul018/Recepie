@@ -270,7 +270,7 @@ class CatalogViewSet(viewsets.ModelViewSet):
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    
+
 class RecentList(generics.ListAPIView):
     serializer_class    = SlimRecipeSerializer
     permission_classes  = [permissions.IsAuthenticated]
