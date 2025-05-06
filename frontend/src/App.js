@@ -42,25 +42,14 @@ function BackgroundVideo() {
           objectFit: 'cover',
           zIndex: -2,
           pointerEvents: 'none',
-          filter: 'brightness(0.9) saturate(0.9)' // dim + tone down color
+          filter: 'brightness(0.8) saturate(0.7)' // dim + tone down color
         }}
       >
         <source src="/background.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)', // dark overlay
-          zIndex: -1,
-          pointerEvents: 'none'
-        }}
-      />
+      
     </>
   );
 }

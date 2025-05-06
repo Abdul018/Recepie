@@ -79,6 +79,7 @@ export function AuthPage() {
 
   return (
     <>
+    
       {/* ────────── Top bar ────────── */}
       <AppBar position="static" sx={{ bgcolor: COLORS.surface, py: 1 }}>
         <Toolbar
@@ -86,6 +87,7 @@ export function AuthPage() {
           onSubmit={handleQuickLogin}
           sx={{ ml: 'auto', gap: 2 }}
         >
+          
           <TextField
             size="small"
             placeholder="Username or Email"
