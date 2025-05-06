@@ -1,3 +1,4 @@
+// src/pages/AuthPage.js
 import React, { useState, useContext } from 'react';
 import {
   AppBar,
@@ -7,44 +8,91 @@ import {
   TextField,
   Button,
   Typography,
-  Stack,Box
+  Stack,
+  Box
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
-const Card = ({ title, onSubmit, children }) => (
-  <Paper sx={{ p: 3, width: 320 }} component="form" onSubmit={onSubmit}>
-    <Typography variant="h6" align="center" mb={2}>{title}</Typography>
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>{children}</Box>
+/* ---------- brand palette & helpers ---------- */
+const COLORS = {
+  bg:       '#121212',      // matte‑black base
+  surface:  '#1e1e1e',      // slightly lighter cards / inputs
+  accent:   '#ff6b00',      // rich orange
+  text:     '#ffffff',
+  textDim:  '#bdbdbd'
+};
+
+const fieldStyle = {
+  bgcolor: COLORS.surface,
+  input:   { color: COLORS.text },
+  label:   { color: COLORS.textDim },
+  fieldset:{ borderColor: '#333' },
+  '& .MuiOutlinedInput-root:hover fieldset':   { borderColor: COLORS.accent },
+  '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: COLORS.accent }
+};
+
+/* ---------- small reusable card ---------- */
+const AuthCard = ({ title, onSubmit, children }) => (
+  <Paper
+    component="form"
+    onSubmit={onSubmit}
+    elevation={4}
+    sx={{
+      width: '100%',
+      maxWidth: 480,
+      p: { xs: 4, md: 5 },
+      borderRadius: 2,
+      bgcolor: COLORS.surface
+    }}
+  >
+    <Typography variant="h5" fontWeight={600} mb={3} color={COLORS.text}>
+      {title}
+    </Typography>
+    <Stack spacing={2}>{children}</Stack>
   </Paper>
 );
 
+/* ---------- main page ---------- */
 export function AuthPage() {
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const { login, signup } = useContext(AuthContext);
 
+  /* quick‑login form (top bar) */
   const [L, setL] = useState({ username: '', password: '' });
-  const loginSubmit = e => { e.preventDefault(); login(L.username, L.password).then(() => nav('/')).catch(() => alert('Login failed')); };
+  const handleQuickLogin = e => {
+    e.preventDefault();
+    login(L.username, L.password)
+      .then(() => navigate('/'))
+      .catch(() => alert('Login failed'));
+  };
 
+  /* sign‑up form */
   const [S, setS] = useState({ username: '', email: '', password: '', confirm: '' });
-  const signupSubmit = e => {
+  const handleSignup = e => {
     e.preventDefault();
     if (S.password !== S.confirm) return alert('Passwords mismatch');
-    signup(S.username, S.email, S.password).then(() => nav('/')).catch(() => alert('Signup failed'));
+    signup(S.username, S.email, S.password)
+      .then(() => navigate('/'))
+      .catch(() => alert('Signup failed'));
   };
 
   return (
     <>
-      {/* ────────── Top bar (quick login) ────────── */}
-      <AppBar position="static" sx={{ bgcolor: '#262c38', py: 1 }}>
-        <Toolbar sx={{ ml: 'auto', gap: 2 }}>
+      {/* ────────── Top bar ────────── */}
+      <AppBar position="static" sx={{ bgcolor: COLORS.surface, py: 1 }}>
+        <Toolbar
+          component="form"
+          onSubmit={handleQuickLogin}
+          sx={{ ml: 'auto', gap: 2 }}
+        >
           <TextField
             size="small"
             placeholder="Username or Email"
             value={L.username}
             onChange={e => setL({ ...L, username: e.target.value })}
             variant="outlined"
-            sx={{ bgcolor: 'white', borderRadius: 1, width: 220 }}
+            sx={{ width: 220, ...fieldStyle }}
           />
           <TextField
             size="small"
@@ -53,145 +101,122 @@ export function AuthPage() {
             value={L.password}
             onChange={e => setL({ ...L, password: e.target.value })}
             variant="outlined"
-            sx={{ bgcolor: 'white', borderRadius: 1, width: 200 }}
+            sx={{ width: 200, ...fieldStyle }}
           />
           <Button
-            onClick={loginSubmit}
+            type="submit"
             variant="contained"
-            color="warning"
-            sx={{ px: 4, fontWeight: 600 }}
+            sx={{
+              bgcolor: COLORS.accent,
+              '&:hover': { bgcolor: '#e86500' },
+              px: 4,
+              fontWeight: 600
+            }}
           >
             Login
           </Button>
         </Toolbar>
       </AppBar>
-      <Box
-    sx={{
-      /* ── background image settings ── */
-      backgroundImage: 'url(.\frontend\public\food-bg.jpg.jpeg)',   //  <-- put your file here
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
 
-      /* ensures the image spans full height under the app-bar */
-      minHeight: '100vh',
-    }}
-  >
-      {/* ────────── Split screen ────────── */}
-      <Grid container sx={{ minHeight: 'calc(100vh - 64px)' }}>
-        {/* LEFT — brand/message  (≈ 5 / 12 width on desktop) */}
-        <Grid
-          item
-          xs={12}
-          md={5}
-          sx={{
-            bgcolor: '#eef6f7',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            pl: { xs: 4, md: 10 },
-            pr: { xs: 4, md: 4 },
-            py: { xs: 6, md: 0 },
-          }}
-        >
-          <Typography
-            variant="h3"
-            fontWeight={700}
-            color="#ff6347"
-            gutterBottom
-            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-          >
-            Bite Delight <span role="img" aria-label="plate">🍽️</span>
-          </Typography>
-  
-          <Typography variant="h6" sx={{ maxWidth: 460, lineHeight: 1.4 }}>
-            Your ultimate place for personalized recipe discovery. Taste meets
-            tech&nbsp;— join our community now and spice up your cooking journey!
-          </Typography>
-        </Grid>
-  
-        {/* RIGHT — sign-up card (≈ 7 / 12 width on desktop) */}
-        <Grid
-          item
-          xs={12}
-          md={7}
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            width: '100%',
-            mx: 'auto',
-            pt: { xs: 6, md: 10 },
-            px: { xs: 4, md: 0 },
-          }}
-        >
-          <Paper
-            component="form"
-            onSubmit={signupSubmit}
-            elevation={3}
+      {/* ────────── Body (split layout) ────────── */}
+      <Box sx={{ bgcolor: COLORS.bg, minHeight: '100vh' }}>
+        <Grid container sx={{ minHeight: 'calc(100vh - 64px)' }}>
+          {/* LEFT — hero / copy */}
+          <Grid
+            item
+            xs={12}
+            md={5}
             sx={{
-              width: '100%',
-              maxWidth: 480,
-              borderRadius: 2,
-              p: { xs: 4, md: 5 },
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              px: { xs: 4, md: 10 },
+              py: { xs: 8, md: 0 }
             }}
           >
-            <Typography variant="h5" fontWeight={600} mb={3}>
-              Create Your Account
+            <Typography
+              variant="h3"
+              fontWeight={700}
+              color={COLORS.accent}
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              Bite Delight <span role="img" aria-label="plate">🍽️</span>
             </Typography>
-  
-            <Stack spacing={1}>
+
+            <Typography
+              variant="h6"
+              sx={{ maxWidth: 480, lineHeight: 1.5, color: COLORS.textDim }}
+            >
+              Your ultimate place for personalized recipe discovery. Taste meets
+              tech — join our community now and spice up your cooking journey!
+            </Typography>
+          </Grid>
+
+          {/* RIGHT — sign‑up */}
+          <Grid
+            item
+            xs={12}
+            md={7}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              pt: { xs: 6, md: 10 },
+              px: { xs: 4, md: 0 }
+            }}
+          >
+            <AuthCard title="Create Your Account" onSubmit={handleSignup}>
               <TextField
-                fullWidth
                 label="Username"
                 required
                 value={S.username}
                 onChange={e => setS({ ...S, username: e.target.value })}
+                sx={fieldStyle}
               />
               <TextField
-                fullWidth
                 label="Email Address"
                 type="email"
                 required
                 value={S.email}
                 onChange={e => setS({ ...S, email: e.target.value })}
+                sx={fieldStyle}
               />
               <TextField
-                fullWidth
                 label="Password"
                 type="password"
                 required
                 value={S.password}
                 onChange={e => setS({ ...S, password: e.target.value })}
+                sx={fieldStyle}
               />
               <TextField
-                fullWidth
                 label="Confirm Password"
                 type="password"
                 required
                 value={S.confirm}
                 onChange={e => setS({ ...S, confirm: e.target.value })}
+                sx={fieldStyle}
               />
-  
+
               <Button
                 type="submit"
                 variant="contained"
+                fullWidth
                 sx={{
                   mt: 1,
-                  bgcolor: '#4CAF50',
-                  '&:hover': { bgcolor: '#449949' },
-                  fontWeight: 600,
                   py: 1.2,
+                  fontWeight: 600,
+                  bgcolor: COLORS.accent,
+                  '&:hover': { bgcolor: '#e86500' }
                 }}
-                fullWidth
               >
-                Sign Up
+                Sign Up
               </Button>
-            </Stack>
-          </Paper>
+            </AuthCard>
+          </Grid>
         </Grid>
-      </Grid>
       </Box>
     </>
   );
-}  
+}

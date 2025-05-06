@@ -5,6 +5,7 @@ import {
   IconButton, Stack
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 
 export function RecipeCard({ recipe, onRemove }) {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export function RecipeCard({ recipe, onRemove }) {
     'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=600';
 
   return (
+  <motion.div whileHover={{ scale: 1.05 }} style={{ height: '100%' }}>
     <Card
       sx={{ cursor: 'pointer', borderRadius: 2, overflow: 'hidden', position: 'relative' }}
       onClick={handleClick}
@@ -77,5 +79,6 @@ export function RecipeCard({ recipe, onRemove }) {
         )}
       </CardContent>
     </Card>
+  </motion.div>
   );
 }
